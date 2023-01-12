@@ -282,6 +282,11 @@ class _CallPageState extends State<CallPage> {
       setState(() {
         remoteUsermuted = true;
       });
+    } else if (choice == Constants.unmuteAll) {
+      _engine.muteAllRemoteAudioStreams(false);
+      setState(() {
+        remoteUsermuted = false;
+      });
     }
   }
 
@@ -551,6 +556,7 @@ ListView.builder(
 
 class Constants {
   static const String muteAll = 'Mute All';
+  static const String unmuteAll = 'Unmute All';
 
-  static const List<String> choices = <String>[muteAll];
+  static const List<String> choices = <String>[muteAll, unmuteAll];
 }
