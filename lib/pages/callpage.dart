@@ -24,12 +24,10 @@ class _CallPageState extends State<CallPage> {
   late RtcEngine _engine;
   bool muted = false;
   bool remoteUsermuted = false;
-  final users = <int>[
-    10000001,
-  ];
+  final users = <int>[];
   List<int> remoteUserIDs = [];
   final infoStrings = <String>[];
-  List<String> usernames = [];
+
   List<UserModel> userModels = [];
   String muteFrom = "";
   String unmuteFrom = "";
@@ -52,18 +50,17 @@ class _CallPageState extends State<CallPage> {
     super.dispose();
     users.clear();
     _engine.leaveChannel();
-    usernames.clear();
     _localUserJoined = false;
     userModels.clear();
   }
 
+// ********************AGORA ENGINE INITIALIZATION*******************
   Future<void> initAgora() async {
     // retrieve permissions
     await [Permission.microphone, Permission.camera].request();
 
     //create the engine
     _engine = createAgoraRtcEngine();
-    // _addAgoraEventHandler();
     await _engine.initialize(const RtcEngineContext(
       appId: appId,
       channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
@@ -75,7 +72,6 @@ class _CallPageState extends State<CallPage> {
           debugPrint("local user ${connection.localUid} joined");
           setState(() {
             _localUserJoined = true;
-            usernames.add(connection.localUid.toString());
           });
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
@@ -86,7 +82,6 @@ class _CallPageState extends State<CallPage> {
                 localMute: false, serverMute: false, remoteMute: false));
 
             remoteUserIDs.add(remoteUid);
-            usernames.add(_remoteUid.toString());
             users.add(_remoteUid!);
           });
         },
@@ -121,37 +116,6 @@ class _CallPageState extends State<CallPage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(debugShowCheckedModeBanner: false, home: homeWidget());
-  }
-
-  List<String> forloopfunc() {
-    for (var i = 0; i <= users.length; i++) {
-      usernames.add(users[i].toString());
-    }
-    return usernames;
-  }
-
-  Future<bool> _onWillPop() async {
-    return (await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Are you sure?'),
-            content: const Text('Do you want to exit the App'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  SystemNavigator.pop();
-                  _engine.leaveChannel();
-                },
-                child: const Text('Yes'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-            ],
-          ),
-        )) ??
-        false;
   }
 
   Widget homeWidget() {
@@ -230,7 +194,6 @@ class _CallPageState extends State<CallPage> {
                   );
                   debugPrint("BASILDIIIIIIIII ");
                   debugPrint("Info string in icinde ne var: $infoStrings");
-                  debugPrint("Usernames empty mi: ${usernames.isEmpty} ");
                   debugPrint("Remote ID: $_remoteUid");
                   debugPrint("Users emtpy mi: ${users.isEmpty}");
                   debugPrint("Local User Joined: $_localUserJoined");
@@ -248,7 +211,44 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-  // Display remote user's video
+// ************** FUNCTIONS *************************
+
+  void endCall() {
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (ctx) => const LoginHome()));
+  }
+
+  void handleMute() {
+    setState(() {
+      muted = !muted;
+    });
+    _engine.muteLocalAudioStream(muted);
+  }
+
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Are you sure?'),
+            content: const Text('Do you want to exit the App'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  SystemNavigator.pop();
+                  _engine.leaveChannel();
+                },
+                child: const Text('Yes'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
   void choiceAction(String choice) {
     if (choice == Constants.muteAll) {
       _engine.muteAllRemoteAudioStreams(true);
@@ -262,6 +262,7 @@ class _CallPageState extends State<CallPage> {
       });
     }
   }
+  //  *****************WIDGETS***********************
 
   Widget _buildPopupDialog(BuildContext context) {
     return AlertDialog(
@@ -294,14 +295,14 @@ class _CallPageState extends State<CallPage> {
             child: Text(unmuteFrom),
           ),
           widget.isAudience!
-              ? Text("")
+              ? const Text("")
               : ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: color6),
                   onPressed: () {},
                   child: const Text("Ban"),
                 ),
           widget.isAudience!
-              ? Text("")
+              ? const Text("")
               : ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: color6),
                   onPressed: () {},
@@ -336,78 +337,34 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-  void endCall() {
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (ctx) => const LoginHome()));
-  }
-
-  void handleMute() {
-    setState(() {
-      muted = !muted;
-    });
-    _engine.muteLocalAudioStream(muted);
-  }
-
-/*  ListView.builder(
-          itemCount: users.length ~/ 3 + 1,
-          itemBuilder: ((context, index) {
-            if (users.isEmpty) {
-              return Center(
-                  child: Container(
-                      height: 250,
-                      width: 250,
-                      color: Colors.cyan,
-                      child: const Text('null')));
-            } else {
-              return Row(
-                children: [
-                  _remoteVideo(),
-                ],
-              );
-            }
-          }));
-          */
   Widget listViewdeneme() {
-    if (users.isNotEmpty) {
+    if (remoteUserIDs.isNotEmpty) {
       return GridView.builder(
+          itemCount: users.length,
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 200,
               childAspectRatio: 23.8 / 30,
               crossAxisSpacing: 20,
               mainAxisSpacing: 20),
-          itemCount: users.length - 1,
           itemBuilder: ((context, index) {
-            if (users.isEmpty) {
-              return Center(
-                  child: Container(
-                      height: 350,
-                      width: 250,
-                      color: Colors.cyan,
-                      child: const Text('null')));
-            } else {
-              return _remoteVideo();
-            }
+            return _remoteVideo();
           }));
     } else {
-      return ListView.builder(
-          itemCount: users.length,
-          itemBuilder: ((context, index) {
-            if (users.isEmpty) {
-              return Center(
-                  child: Container(
-                      height: 250,
-                      width: 250,
-                      color: Colors.cyan,
-                      child: const Text('null')));
-            } else {
-              return Row(
-                children: [
-                  _remoteVideo(),
-                ],
-              );
-            }
-          }));
+      try {
+        return const Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.only(top: 18),
+              child: Text(
+                "You are alone in this room",
+                style: TextStyle(fontSize: 24),
+              ),
+            ));
+      } catch (e) {
+        debugPrint("HATAAAAAAAAAA" + e.toString());
+      }
     }
+    return const Text("");
   }
 
   Widget _remoteVideo() {
@@ -465,33 +422,6 @@ class _CallPageState extends State<CallPage> {
         ),
       );
     }
-  }
-
-  Widget stackView() {
-    return Stack(
-      children: [
-        Center(
-          child: _remoteVideo(),
-        ),
-        Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: 150,
-            height: 200,
-            child: Center(
-              child: _localUserJoined
-                  ? AgoraVideoView(
-                      controller: VideoViewController(
-                        rtcEngine: _engine,
-                        canvas: const VideoCanvas(uid: 0),
-                      ),
-                    )
-                  : const CircularProgressIndicator(),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 
