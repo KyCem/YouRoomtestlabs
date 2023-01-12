@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutteragoradenemecem/pages/loginPage.dart';
 import 'package:flutteragoradenemecem/src/buttonapp.dart';
+import 'package:flutteragoradenemecem/src/users.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../src/settings.dart';
 
@@ -23,10 +24,13 @@ class _CallPageState extends State<CallPage> {
   late RtcEngine _engine;
   bool muted = false;
   bool remoteUsermuted = false;
-  final users = <int>[];
+  final users = <int>[
+    10000001,
+  ];
+  List<int> remoteUserIDs = [];
   final infoStrings = <String>[];
   List<String> usernames = [];
-
+  List<UserModel> userModels = [];
   String muteFrom = "";
   String unmuteFrom = "";
 
@@ -50,6 +54,7 @@ class _CallPageState extends State<CallPage> {
     _engine.leaveChannel();
     usernames.clear();
     _localUserJoined = false;
+    userModels.clear();
   }
 
   Future<void> initAgora() async {
@@ -71,13 +76,16 @@ class _CallPageState extends State<CallPage> {
           setState(() {
             _localUserJoined = true;
             usernames.add(connection.localUid.toString());
-            users.add(connection.localUid!);
           });
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
           debugPrint("remote user $remoteUid joined");
           setState(() {
             _remoteUid = remoteUid;
+            userModels.add(UserModel(remoteUid,
+                localMute: false, serverMute: false, remoteMute: false));
+
+            remoteUserIDs.add(remoteUid);
             usernames.add(_remoteUid.toString());
             users.add(_remoteUid!);
           });
@@ -86,7 +94,8 @@ class _CallPageState extends State<CallPage> {
             UserOfflineReasonType reason) {
           debugPrint("remote user $remoteUid left channel");
           setState(() {
-            _remoteUid = null;
+            remoteUserIDs.remove(remoteUid);
+            userModels.remove(UserModel(remoteUid));
           });
         },
         onTokenPrivilegeWillExpire: (RtcConnection connection, String token) {
@@ -226,6 +235,8 @@ class _CallPageState extends State<CallPage> {
                   debugPrint("Users emtpy mi: ${users.isEmpty}");
                   debugPrint("Local User Joined: $_localUserJoined");
                   debugPrint("Channel Name: ${widget.channelName}");
+                  debugPrint("RemoteuserIDs: ${remoteUserIDs.toString()}");
+                  debugPrint("users.lenght : ${users.length.toString()}");
                 },
                 child: const Text("Debug Console"),
               ),
@@ -263,8 +274,7 @@ class _CallPageState extends State<CallPage> {
             style: ElevatedButton.styleFrom(backgroundColor: color6),
             onPressed: () {
               setState(() {
-                int remoteuid = _remoteUid!;
-                _engine.muteRemoteAudioStream(uid: remoteuid, mute: true);
+                _engine.muteRemoteAudioStream(uid: _remoteUid!, mute: true);
                 remoteUsermuted = true;
               });
 
@@ -276,8 +286,7 @@ class _CallPageState extends State<CallPage> {
             style: ElevatedButton.styleFrom(backgroundColor: color6),
             onPressed: () {
               setState(() {
-                int remoteuid = _remoteUid!;
-                _engine.muteRemoteAudioStream(uid: remoteuid, mute: false);
+                _engine.muteRemoteAudioStream(uid: _remoteUid!, mute: false);
                 Navigator.of(context).pop();
                 remoteUsermuted = false;
               });
@@ -339,10 +348,8 @@ class _CallPageState extends State<CallPage> {
     _engine.muteLocalAudioStream(muted);
   }
 
-  Widget listViewdeneme() {
-    if (users.isNotEmpty) {
-      return ListView.builder(
-          itemCount: users.length - 1,
+/*  ListView.builder(
+          itemCount: users.length ~/ 3 + 1,
           itemBuilder: ((context, index) {
             if (users.isEmpty) {
               return Center(
@@ -357,6 +364,28 @@ class _CallPageState extends State<CallPage> {
                   _remoteVideo(),
                 ],
               );
+            }
+          }));
+          */
+  Widget listViewdeneme() {
+    if (users.isNotEmpty) {
+      return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 23.8 / 30,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20),
+          itemCount: users.length - 1,
+          itemBuilder: ((context, index) {
+            if (users.isEmpty) {
+              return Center(
+                  child: Container(
+                      height: 350,
+                      width: 250,
+                      color: Colors.cyan,
+                      child: const Text('null')));
+            } else {
+              return _remoteVideo();
             }
           }));
     } else {
@@ -381,65 +410,11 @@ class _CallPageState extends State<CallPage> {
     }
   }
 
-  /* 
-  return FutureBuilder(
-        future: initAgora(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-                itemCount: users.length - 1,
-                itemBuilder: ((context, index) {
-                  if (users.isEmpty) {
-                    return Center(
-                        child: Container(
-                            height: 250,
-                            width: 250,
-                            color: Colors.cyan,
-                            child: const Text('null')));
-                  } else {
-                    return Row(
-                      children: [
-                        _remoteVideo(),
-                      ],
-                    );
-                  }
-                }));
-          } else {
-            return Center(
-                child: Container(
-                    height: 250,
-                    width: 250,
-                    color: Colors.cyan,
-                    child: const Text('null')));
-          }
-        });
-  */
-/* 
-ListView.builder(
-        itemCount: users.length - 1,
-        itemBuilder: ((context, index) {
-          if (users.isEmpty) {
-            return Center(
-                child: Container(
-                    height: 250,
-                    width: 250,
-                    color: Colors.cyan,
-                    child: const Text('null')));
-          } else {
-            return Row(
-              children: [
-                _remoteVideo(),
-              ],
-            );
-          }
-        }));
-*/
-
   Widget _remoteVideo() {
     if (_remoteUid != null) {
       return SizedBox(
-        width: MediaQuery.of(context).size.width * 130 / 300,
-        height: 240,
+        width: MediaQuery.of(context).size.width / 3,
+        height: 360,
         child: Stack(children: [
           AgoraVideoView(
             controller: VideoViewController.remote(
