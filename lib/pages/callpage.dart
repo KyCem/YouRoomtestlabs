@@ -42,53 +42,6 @@ class _CallPageState extends State<CallPage> {
     _localUserJoined = false;
   }
 
-  void _onJoinChannelSuccess(RtcConnection connection, int elapsed) {
-    setState(() {
-      _localUserJoined = true;
-      final info = "local user ${connection.localUid} joine.";
-      infoStrings.add(info);
-
-      usernames.add(connection.localUid.toString());
-    });
-  }
-
-  void _onUserJoined(RtcConnection connection, int remoteUid, int elapsed) {
-    setState(() {
-      final info = "remote user $remoteUid joined.";
-      infoStrings.add(info);
-      _remoteUid = remoteUid;
-      users.add(_remoteUid!);
-    });
-  }
-
-  void _onLeaveChannel(RtcConnection connection, RtcStats stats) {
-    setState(() {
-      infoStrings.add("Leave channel");
-      users.clear();
-    });
-  }
-
-  void _onUserOffline(
-      RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-    setState(() {
-      final info = "Remote user $remoteUid has left the channel.";
-      infoStrings.add(info);
-      _remoteUid = 0;
-      users.remove(remoteUid);
-    });
-  }
-
-  void _addAgoraEventHandler() {
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: _onJoinChannelSuccess,
-        onUserJoined: _onUserJoined,
-        onLeaveChannel: _onLeaveChannel,
-        onUserOffline: _onUserOffline,
-      ),
-    );
-  }
-
   Future<void> initAgora() async {
     // retrieve permissions
     await [Permission.microphone, Permission.camera].request();
