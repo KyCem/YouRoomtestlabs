@@ -27,10 +27,20 @@ class _CallPageState extends State<CallPage> {
   final infoStrings = <String>[];
   List<String> usernames = [];
 
+  String muteFrom = "";
+  String unmuteFrom = "";
+
   @override
   void initState() {
     super.initState();
     initAgora();
+    if (widget.isAudience!) {
+      muteFrom = "Mute for yourself";
+      unmuteFrom = "Unmute for yourself";
+    } else if (widget.isAudience! == false) {
+      muteFrom = "Mute from server";
+      unmuteFrom = "Unmute from server";
+    }
   }
 
   @override
@@ -127,7 +137,6 @@ class _CallPageState extends State<CallPage> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                // <-- SEE HERE
                 child: const Text('No'),
               ),
             ],
@@ -261,7 +270,7 @@ class _CallPageState extends State<CallPage> {
 
               Navigator.of(context).pop();
             },
-            child: const Text("Mute"),
+            child: Text(muteFrom),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: color6),
@@ -273,18 +282,22 @@ class _CallPageState extends State<CallPage> {
                 remoteUsermuted = false;
               });
             },
-            child: const Text("Unmute"),
+            child: Text(unmuteFrom),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: color6),
-            onPressed: () {},
-            child: const Text("Ban"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: color6),
-            onPressed: () {},
-            child: const Text("Kick"),
-          ),
+          widget.isAudience!
+              ? Text("")
+              : ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: color6),
+                  onPressed: () {},
+                  child: const Text("Ban"),
+                ),
+          widget.isAudience!
+              ? Text("")
+              : ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: color6),
+                  onPressed: () {},
+                  child: const Text("Kick"),
+                ),
         ],
       ),
       actions: <Widget>[
