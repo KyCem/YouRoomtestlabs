@@ -55,7 +55,7 @@ class _LoginHomeState extends State<LoginHome> {
                   });
                 },
                 decoration: InputDecoration(
-                  errorText: validateError ? 'Channel name is mandatory' : null,
+                  errorText: validateError ? 'Channel name is required' : null,
                   focusColor: Colors.white,
                   prefixIcon: const Icon(
                     Icons.app_shortcut_outlined,
