@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 const appId = "393d5dc684bf47dea8c74948c9fe0f5e";
 const token =
-    "007eJxTYOB9KBGgdjh7+eHPAdyxfPfcs2qDUy4uuariIKRdzOeYkafAYGxpnGKakmxmYZKUZmKekppokWxuYmlikWyZlmqQZpr679X+5IZARoYj8coMjFAI4rMzVOaXFuXn5zIwAAAZYR+t";
+    "007eJxTYPjWUbvlmdaniH2B4Rk+osvOcvPWfUrSuPF3rsqn6GUlbGoKDMaWximmKclmFiZJaSbmKamJFsnmJpYmFsmWaakGaaapfF+OJTcEMjI07znJwAiFID43Q2V+aVF+fm5JanEJAwMAl68kJw==";
 
 Color color1 = const Color(0xff242E38);
 Color color2 = const Color(0xffEAC43D);
